@@ -142,16 +142,30 @@ function App() {
     };
   }, [audioStarted]);
 
-  // Prevent pull-to-refresh on mobile
+  // Better pull-to-refresh prevention that allows scrolling
   useEffect(() => {
-    const preventPullToRefresh = (e) => {
-      e.preventDefault();
+    let startY = 0;
+    
+    const handleTouchStart = (e) => {
+      startY = e.touches[0].clientY;
     };
     
-    document.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+    const handleTouchMove = (e) => {
+      const currentY = e.touches[0].clientY;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Only prevent if at top and pulling down
+      if (scrollTop <= 0 && currentY > startY) {
+        e.preventDefault();
+      }
+    };
+    
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     
     return () => {
-      document.removeEventListener('touchmove', preventPullToRefresh);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
 
